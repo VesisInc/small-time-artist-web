@@ -2,8 +2,11 @@ name: Supabase Keep Alive
 
 on:
   schedule:
-    # Every Sunday at 00:00 UTC
-    - cron: '0 0 * * 0'
+    # 00:00 UTC on the 1st, 7th, 13th, 19th, 25th, and 31st.
+    # Supabase's free tier pauses after 7 days without activity, and GitHub
+    # schedules can start late, so 6 days leaves a one-day buffer.
+    # Cron can't do a rolling 6-day interval; the gap resets each month and never exceeds 6 days.
+    - cron: '0 0 */6 * *'
   workflow_dispatch:
 
 jobs:
