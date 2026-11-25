@@ -9,11 +9,22 @@ on:
 jobs:
   ping_supabase:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     # Safety lock to prevent execution on other branches
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Ping Supabase Rest API
+      - name: Query Supabase PostgreSQL
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          PGCONNECT_TIMEOUT: '15'
         run: |
-          curl -i -X GET "${{ secrets.SUPABASE_URL }}/auth/v1/health" \
-          -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-          -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::SUPABASE_DB_URL is not configured"
+            exit 1
+          fi
+
+          psql "$SUPABASE_DB_URL" \
+            --no-psqlrc \
+            --no-password \
+            --set=ON_ERROR_STOP=1 \
+            --command='SELECT 1;'
